@@ -23,9 +23,12 @@ export const RepoCard = memo(
 
     return (
       <div className={classes.root}>
-        <Card className={clsx(classes.repoCard, checked && classes.selected)}>
+        <Card
+          className={clsx(classes.repoCard, checked && classes.selected)}
+          onClick={handleSelect}
+        >
           <div className={classes.repo}>
-            <Checkbox onClick={handleSelect} checked={checked} />
+            <Checkbox checked={checked} />
             <div>{repo}</div>
           </div>
           <IconButton className={classes.star} onClick={handleFavorite}>

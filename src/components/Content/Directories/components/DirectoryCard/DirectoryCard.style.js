@@ -42,7 +42,6 @@ export const useStyles = makeStyles(({ palette }) => ({
       borderRadius: "20px",
     },
     "100%": {
-      borderRadius: "10px",
       transform: "scale(1.01,1.02)",
       borderRadius: "10px !important",
     },

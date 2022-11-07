@@ -14,7 +14,7 @@ import { getFavorites, updateFavorites } from "dl/repos";
 import { getDirectories, updateDirectories } from "dl/directories";
 
 // Components
-import { ProblemPopup } from "components/ProblemPopup/ProblemPopup";
+import { ProblemPopup } from "components";
 
 // React
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
@@ -29,34 +29,40 @@ export const useAppProps = () => useContext(Context);
 
 export const AppContext = ({ children }) => {
   const [repos, setRepos] = useState([]);
-  const [dirValue, setDirValue] = useState("");
-  const [search, setSearch] = useState("");
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [dirValue, setDirValue] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState([...tabsSet.values()][0]);
+  const [directories, setDirectories] = useState(new Set());
   const [selectedRepos, setSelectedRepos] = useState(new Set());
   const [favoriteRepos, setFavoriteRepos] = useState(new Set());
-  const [directories, setDirectories] = useState(new Set());
 
   const directoriesArr = useMemo(() => [...directories], [directories]);
 
   useEffect(() => {
-    // TODO
-    async function fetchData() {
-      try {
-        const { directories } = await getDirectories();
-        setDirectories(new Set(directories));
+    const promises = [getDirectories(), getFavorites()];
+    Promise.all(promises)
+      .then(([{ directories }, { favorites }]) => {
+        setIsLoading(false);
+        directories?.length && setDirectories(new Set(directories));
 
-        const { favorites } = await getFavorites();
-        const defaultFavorites = new Set(favorites);
-        setFavoriteRepos(defaultFavorites);
-        setSelectedRepos(defaultFavorites);
-      } catch (err) {
-        console.error(err);
-      }
+        if (!favorites?.length) {
+          return;
+        }
+        setFavoriteRepos(new Set(favorites));
+        setSelectedRepos(new Set(favorites));
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
     }
 
-    fetchData();
-  }, []);
+    updateFavorites([...favoriteRepos]);
+  }, [favoriteRepos]);
 
   useEffect(() => {
     if (!directoriesArr.length) {
@@ -93,8 +99,7 @@ export const AppContext = ({ children }) => {
         ? prev.delete(repoDirectory)
         : prev.add(repoDirectory);
 
-      updateFavorites([...prev]);
-      return new Set(prev);
+      return new Set([...prev]);
     });
   };
 

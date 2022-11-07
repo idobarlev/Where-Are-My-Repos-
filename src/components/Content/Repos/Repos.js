@@ -20,11 +20,19 @@ export const Repos = () => {
         {filteredRepos.map(({ repo, directory }, index) => (
           <Grid key={directory} item xs={12}>
             <RepoCard
+              repo={repo}
+              index={index + 1}
+              directory={directory}
+              handleSelect={(event) => {
+                event.stopPropagation();
+                handleSelectRepo(directory);
+              }}
+              handleFavorite={(event) => {
+                event.stopPropagation();
+                handleSelectFavorite(directory);
+              }}
               checked={selectedRepos.has(directory)}
               favorite={favoriteRepos.has(directory)}
-              {...{ index: index + 1, repo, directory }}
-              handleSelect={() => handleSelectRepo(directory)}
-              handleFavorite={() => handleSelectFavorite(directory)}
             />
           </Grid>
         ))}
