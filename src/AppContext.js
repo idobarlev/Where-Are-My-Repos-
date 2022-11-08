@@ -1,6 +1,3 @@
-// Constants
-import { tabsSet, batDir } from "constants";
-
 // Utilities
 import {
   runBatOnRepos,
@@ -9,20 +6,21 @@ import {
   getReposWithDirectories,
 } from "utilities";
 
+// Hooks
+import { useDebounce } from "hooks";
+
+// Constants
+import { batDir, tabsSet } from "constants";
+
+// Components
+import { Loading, ProblemPopup } from "components";
+
 // Dl
 import { getFavorites, updateFavorites } from "dl/repos";
 import { getDirectories, updateDirectories } from "dl/directories";
 
-// Components
-import { ProblemPopup } from "components";
-
 // React
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-// TODO -
-// 1. Fix first add favorite
-// 2. Add debounce for search
-// 3. Skeleton for search
 
 const Context = createContext({});
 export const useAppProps = () => useContext(Context);
@@ -38,13 +36,13 @@ export const AppContext = ({ children }) => {
   const [selectedRepos, setSelectedRepos] = useState(new Set());
   const [favoriteRepos, setFavoriteRepos] = useState(new Set());
 
+  const debouncedSearchVal = useDebounce(search, 500);
   const directoriesArr = useMemo(() => [...directories], [directories]);
 
   useEffect(() => {
     const promises = [getDirectories(), getFavorites()];
     Promise.all(promises)
       .then(([{ directories }, { favorites }]) => {
-        setIsLoading(false);
         directories?.length && setDirectories(new Set(directories));
 
         if (!favorites?.length) {
@@ -53,19 +51,16 @@ export const AppContext = ({ children }) => {
         setFavoriteRepos(new Set(favorites));
         setSelectedRepos(new Set(favorites));
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error(err))
+      .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-
-    updateFavorites([...favoriteRepos]);
+    !isLoading && updateFavorites([...favoriteRepos]);
   }, [favoriteRepos]);
 
   useEffect(() => {
-    if (!directoriesArr.length) {
+    if (isLoading || !directoriesArr) {
       return;
     }
 
@@ -77,12 +72,12 @@ export const AppContext = ({ children }) => {
   }, [directoriesArr]);
 
   const filteredRepos = useMemo(() => {
-    if (search.length < 2) {
+    if (debouncedSearchVal.length < 2) {
       return repos;
     }
 
-    return repos.filter(({ repo }) => repo.includes(search));
-  }, [repos, search]);
+    return repos.filter(({ repo }) => repo.includes(debouncedSearchVal));
+  }, [repos, debouncedSearchVal]);
 
   const handleSelectRepo = (repoDirectory) => {
     setSelectedRepos((prev) => {
@@ -99,7 +94,7 @@ export const AppContext = ({ children }) => {
         ? prev.delete(repoDirectory)
         : prev.add(repoDirectory);
 
-      return new Set([...prev]);
+      return new Set(prev);
     });
   };
 
@@ -202,7 +197,7 @@ export const AppContext = ({ children }) => {
         handleClickFileExplorer,
       }}
     >
-      {children}
+      {isLoading ? <Loading /> : children}
       <ProblemPopup error={error} handleClose={() => setError(null)} />
     </Context.Provider>
   );
