@@ -1,2 +1,5 @@
-const { app } = window.require("@electron/remote");
-export const batDir = `${app.getAppPath()}/src/bat/open.bat`;
+const path = window.require("path");
+
+const { initDir } = require("dl/general/initDir");
+
+export const batDir = path.resolve(initDir, `../../bat/open.bat`);

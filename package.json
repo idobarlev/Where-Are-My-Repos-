@@ -1,5 +1,9 @@
 {
   "name": "wherepos",
+  "description": "repo management",
+  "author": {
+    "name": "idobarlev"
+  },
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -49,6 +53,12 @@
     ],
     "directories": {
       "buildResources": "assets"
+    },
+    "win": {
+      "icon": "/public/icon.png"
+    },
+    "mac": {
+      "icon": "/public/icon.png"
     }
   },
   "eslintConfig": {
